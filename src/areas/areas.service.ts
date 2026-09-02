@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -11,24 +11,50 @@ export class AreasService {
     @InjectRepository(Area)
     private readonly areasRepository: Repository<Area>,
   ) {}
-  
-  create(createAreaDto: CreateAreaDto) {
-    return 'This action adds a new area';
+
+  async create(createAreaDto: CreateAreaDto) {
+    const { name, description, geometry } = createAreaDto;
+
+    if (geometry.type !== 'Polygon') {
+      throw new BadRequestException('Geometry must be a Polygon');
+    }
+
+    const isValid = await this.validateGeometry(geometry);
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid polygon geometry');
+    }
+
+    const area = this.areasRepository.create({
+      name,
+      description,
+      geometry,
+    });
+
+    return await this.areasRepository.save(area);
   }
 
   findAll() {
-    return `This action returns all areas`;
+    return this.areasRepository.find({
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} area`;
-  }
+  private async validateGeometry(geometry: object): Promise<boolean> {
+    const result = await this.areasRepository.query(
+      `
+        SELECT ST_IsValid(
+          ST_SetSRID(
+            ST_GeomFromGeoJSON($1),
+            4326
+          )
+        ) AS "isValid"
+      `,
+      [JSON.stringify(geometry)],
+    );
 
-  update(id: number, updateAreaDto: UpdateAreaDto) {
-    return `This action updates a #${id} area`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} area`;
+    return result[0].isValid;
   }
 }
