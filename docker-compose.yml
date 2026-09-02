@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.5
+    container_name: space-project-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: space
+      POSTGRES_PASSWORD: space
+      POSTGRES_DB: space_project
+
+    ports:
+      - '5432:5432'
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
