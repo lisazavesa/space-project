@@ -57,4 +57,28 @@ export class AreasService {
 
     return result[0].isValid;
   }
+
+  async findContainingPoint(
+    longitude: number,
+    latitude: number,
+  ): Promise<Area[]> {
+    return this.areasRepository
+      .createQueryBuilder('area')
+      .where(
+        `
+          ST_Contains(
+            area.geometry,
+            ST_SetSRID(
+              ST_MakePoint(:longitude, :latitude),
+              4326
+            )
+          )
+        `,
+        {
+          longitude,
+          latitude,
+        },
+      )
+      .getMany();
+  }
 }
