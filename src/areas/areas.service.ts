@@ -3,7 +3,7 @@ import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Area } from './entities/area.entity';
-import { Repository } from 'typeorm';
+import { Polygon, Repository } from 'typeorm';
 
 @Injectable()
 export class AreasService { 
@@ -77,6 +77,36 @@ export class AreasService {
         {
           longitude,
           latitude,
+        },
+      )
+      .getMany();
+  }
+
+  async findIntersectingAreas(geometry: Polygon): Promise<Area[]> {
+    if (geometry.type !== 'Polygon') {
+      throw new BadRequestException('Geometry must be a Polygon');
+    }
+
+    const isValid = await this.validateGeometry(geometry);
+
+    if (!isValid) {
+      throw new BadRequestException('Invalid polygon geometry');
+    }
+
+    return this.areasRepository
+      .createQueryBuilder('area')
+      .where(
+        `
+          ST_Intersects(
+            area.geometry,
+            ST_SetSRID(
+              ST_GeomFromGeoJSON(:geometry),
+              4326
+            )
+          )
+        `,
+        {
+          geometry: JSON.stringify(geometry),
         },
       )
       .getMany();

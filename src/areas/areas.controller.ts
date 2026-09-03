@@ -3,6 +3,7 @@ import { AreasService } from './areas.service';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
 import { FindAreasByPointDto } from './dto/find-areas-by-point.dto';
+import { FindIntersectingAreasDto } from './dto/find-intersecting-areas.dto';
 
 @Controller('areas')
 export class AreasController {
@@ -23,5 +24,10 @@ export class AreasController {
       query.longitude,
       query.latitude,
     );
+  }
+
+  @Post('intersecting')
+  findIntersecting(@Body() dto: FindIntersectingAreasDto) {
+    return this.areasService.findIntersectingAreas(dto.geometry);
   }
 }
