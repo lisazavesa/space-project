@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -107,6 +107,58 @@ export class AreasService {
         `,
         {
           geometry: JSON.stringify(geometry),
+        },
+      )
+      .getMany();
+  }
+
+  async findOneWithArea(id: string) {
+    const result = await this.areasRepository
+      .createQueryBuilder('area')
+      .select([
+        'area.id AS id',
+        'area.name AS name',
+        'area.description AS description',
+        'ST_AsGeoJSON(area.geometry)::json AS geometry',
+        'area.createdAt AS "createdAt"',
+        'area.updatedAt AS "updatedAt"',
+        'ST_Area(area.geometry::geography) AS "areaSquareMeters"',
+      ])
+      .where('area.id = :id', { id })
+      .getRawOne();
+  
+    if (!result) {
+      throw new NotFoundException('Area not found');
+    }
+  
+    return {
+      ...result,
+      areaSquareMeters: Number(result.areaSquareMeters),
+    };
+  }
+
+  async findNearby(
+    longitude: number,
+    latitude: number,
+    distance: number,
+  ): Promise<Area[]> {
+    return this.areasRepository
+      .createQueryBuilder('area')
+      .where(
+        `
+          ST_DWithin(
+            area.geometry::geography,
+            ST_SetSRID(
+              ST_MakePoint(:longitude, :latitude),
+              4326
+            )::geography,
+            :distance
+          )
+        `,
+        {
+          longitude,
+          latitude,
+          distance,
         },
       )
       .getMany();
