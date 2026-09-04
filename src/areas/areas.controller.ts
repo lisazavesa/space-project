@@ -42,6 +42,11 @@ export class AreasController {
     );
   }
 
+  @Get(':id/bounding-box')
+  getBoundingBox(@Param('id') id: string) {
+    return this.areasService.getBoundingBox(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.areasService.findOneWithArea(id);

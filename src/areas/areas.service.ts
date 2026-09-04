@@ -163,4 +163,28 @@ export class AreasService {
       )
       .getMany();
   }
+
+  async getBoundingBox(id: string) {
+    const result = await this.areasRepository
+      .createQueryBuilder('area')
+      .select([
+        'ST_XMin(ST_Envelope(area.geometry)) AS west',
+        'ST_YMin(ST_Envelope(area.geometry)) AS south',
+        'ST_XMax(ST_Envelope(area.geometry)) AS east',
+        'ST_YMax(ST_Envelope(area.geometry)) AS north',
+      ])
+      .where('area.id = :id', { id })
+      .getRawOne();
+
+    if (!result) {
+      throw new NotFoundException('Area not found');
+    }
+
+    return {
+      west: Number(result.west),
+      south: Number(result.south),
+      east: Number(result.east),
+      north: Number(result.north),
+    };
+  }
 }
