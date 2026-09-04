@@ -1,12 +1,23 @@
-import { Controller, Get } from '@nestjs/common';
-import { EarthObservationService } from './earth-observation.service';
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { EarthObservationService } from "./earth-observation.service";
+import { SearchObservationsDto } from "./dto/search-observations.dto";
 
-@Controller('earth-observation')
+@Controller("earth-observation")
 export class EarthObservationController {
-    constructor(private readonly earthObservationService: EarthObservationService) {}
+    constructor(
+        private readonly earthObservationService: EarthObservationService,
+    ) {}
 
-    @Get('collections')
+    @Get("collections")
     getCollections() {
         return this.earthObservationService.getCollections();
+    }
+
+    @Post("areas/:areaId/search")
+    searchObservations(
+        @Param("areaId") areaId: string,
+        @Body() dto: SearchObservationsDto,
+    ) {
+        return this.earthObservationService.searchObservations(areaId, dto);
     }
 }
