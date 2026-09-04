@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AreasModule } from './areas/areas.module';
+import { EarthObservationModule } from './earth-observation/earth-observation.module';
 
 @Module({
   imports: [
@@ -33,6 +34,8 @@ import { AreasModule } from './areas/areas.module';
     }),
 
     AreasModule,
+
+    EarthObservationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
