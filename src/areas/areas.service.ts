@@ -187,4 +187,46 @@ export class AreasService {
       north: Number(result.north),
     };
   }
+
+  async calculateSceneCoverage(
+    areaId: string,
+    sceneGeometry: GeoJSON.Geometry,
+  ): Promise<number> {
+    const result = await this.areasRepository
+      .createQueryBuilder('area')
+      .select(
+        `
+        CASE
+          WHEN ST_Area(area.geometry::geography) = 0 THEN 0
+          ELSE
+            (
+              ST_Area(
+                ST_Intersection(
+                  area.geometry,
+                  ST_SetSRID(
+                    ST_GeomFromGeoJSON(:sceneGeometry),
+                    4326
+                  )
+                )::geography
+              )
+              /
+              ST_Area(area.geometry::geography)
+            ) * 100
+        END
+        `,
+        'coveragePercentage',
+      )
+      .where('area.id = :areaId', { areaId })
+      .setParameter(
+        'sceneGeometry',
+        JSON.stringify(sceneGeometry),
+      )
+      .getRawOne();
+    
+    if (!result) {
+      throw new NotFoundException('Area not found');
+    }
+  
+    return Number(result.coveragePercentage);
+  }
 }

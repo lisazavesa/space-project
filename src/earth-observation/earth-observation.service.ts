@@ -37,8 +37,22 @@ export class EarthObservationService {
             maxCloudCover: dto.maxCloudCover,
         });
 
-        const observations = response.features.map(
-            CopernicusMapper.toObservationResponse,
+        const observations = await Promise.all(
+            response.features.map(async (item) => {
+                const observation =
+                    CopernicusMapper.toObservationResponse(item);
+
+                const coveragePercentage =
+                    await this.areasService.calculateSceneCoverage(
+                        areaId,
+                        item.geometry,
+                    );
+
+                return {
+                    ...observation,
+                    coveragePercentage,
+                };
+            }),
         );
 
         return {

@@ -21,6 +21,7 @@ export class CopernicusMapper {
             cloudCover: item.properties["eo:cloud_cover"] ?? null,
             geometry: item.geometry,
             bbox: item.bbox ?? null,
+            coveragePercentage: null, // later
         };
     }
 }
