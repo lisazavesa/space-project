@@ -5,4 +5,5 @@ export class ObservationResponseDto {
     geometry!: GeoJSON.Geometry;
     bbox!: number[] | null;
     coveragePercentage!: number | null;
+    score!: number | null;
 }

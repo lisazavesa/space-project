@@ -20,4 +20,12 @@ export class EarthObservationController {
     ) {
         return this.earthObservationService.searchObservations(areaId, dto);
     }
+
+    @Post("areas/:areaId/best")
+    getBestObservation(
+        @Param("areaId") areaId: string,
+        @Body() dto: SearchObservationsDto,
+    ) {
+        return this.earthObservationService.getBestObservation(areaId, dto);
+    }
 }

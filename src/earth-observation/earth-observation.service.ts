@@ -5,12 +5,15 @@ import { CopernicusMapper } from "./mappers/copernicus.mapper";
 import { SearchObservationsDto } from "./dto/search-observations.dto";
 import { AreasService } from "src/areas/areas.service";
 import { SearchObservationsResponseDto } from "./dto/search-observations-response.dto";
+import { ObservationScoringService } from "./services/observation-scoring.service";
+import { BestObservationResponseDto } from "./dto/best-observation-response.dto";
 
 @Injectable()
 export class EarthObservationService {
     constructor(
         private readonly copernicusClient: CopernicusClient,
         private readonly areasService: AreasService,
+        private readonly observationScoringService: ObservationScoringService,
     ) {}
 
     async getCollections(): Promise<CollectionResponseDto[]> {
@@ -55,9 +58,46 @@ export class EarthObservationService {
             }),
         );
 
+        const newestObservationDate = new Date(
+            Math.max(
+                ...observations.map((observation) =>
+                    new Date(observation.observedAt).getTime(),
+                ),
+            ),
+        );
+
+        const observationsWithScores = observations.map((observation) => ({
+            ...observation,
+            score: this.observationScoringService.calculateScore(
+                observation,
+                newestObservationDate,
+            ),
+        }));
+
         return {
-            total: observations.length,
-            observations,
+            total: observationsWithScores.length,
+            observations: observationsWithScores,
+        };
+    }
+
+    async getBestObservation(
+        areaId: string,
+        dto: SearchObservationsDto,
+    ): Promise<BestObservationResponseDto> {
+        const result = await this.searchObservations(areaId, dto);
+
+        if (result.observations.length === 0) {
+            return {
+                bestObservation: null,
+            };
+        }
+
+        const bestObservation = result.observations.reduce((best, current) => {
+            return current.score! > best.score! ? current : best;
+        });
+
+        return {
+            bestObservation,
         };
     }
 }

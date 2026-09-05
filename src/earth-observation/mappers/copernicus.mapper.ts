@@ -22,6 +22,7 @@ export class CopernicusMapper {
             geometry: item.geometry,
             bbox: item.bbox ?? null,
             coveragePercentage: null, // later
+            score: null, // later
         };
     }
 }
