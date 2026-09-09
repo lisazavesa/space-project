@@ -1,6 +1,5 @@
 import "dotenv/config";
 import { DataSource } from "typeorm";
-import { Area } from "../areas/entities/area.entity";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
@@ -12,6 +11,6 @@ export const AppDataSource = new DataSource({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
 
-    entities: [Area],
+    entities: ["src/**/entities/*.entity.ts"],
     migrations: ["src/database/migrations/*.ts"],
 });

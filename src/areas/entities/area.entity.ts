@@ -3,10 +3,12 @@ import {
     CreateDateColumn,
     Entity,
     Index,
+    OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from "typeorm";
-import type{ Polygon } from "geojson";
+import type { Polygon } from "geojson";
+import { Observation } from "../../earth-observation/entities/observation.entity";
 
 @Entity("areas")
 export class Area {
@@ -32,6 +34,9 @@ export class Area {
         srid: 4326,
     })
     geometry!: Polygon;
+
+    @OneToMany(() => Observation, (observation) => observation.area)
+    observations!: Observation[];
 
     @CreateDateColumn()
     createdAt!: Date;

@@ -7,6 +7,9 @@ import { AreasService } from "src/areas/areas.service";
 import { SearchObservationsResponseDto } from "./dto/search-observations-response.dto";
 import { ObservationScoringService } from "./services/observation-scoring.service";
 import { BestObservationResponseDto } from "./dto/best-observation-response.dto";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Observation } from "./entities/observation.entity";
+import { Repository } from "typeorm";
 
 @Injectable()
 export class EarthObservationService {
@@ -14,6 +17,9 @@ export class EarthObservationService {
         private readonly copernicusClient: CopernicusClient,
         private readonly areasService: AreasService,
         private readonly observationScoringService: ObservationScoringService,
+
+        @InjectRepository(Observation)
+        private readonly observationsRepository: Repository<Observation>,
     ) {}
 
     async getCollections(): Promise<CollectionResponseDto[]> {
@@ -73,6 +79,22 @@ export class EarthObservationService {
                 newestObservationDate,
             ),
         }));
+
+        await this.observationsRepository.upsert(
+            observationsWithScores.map((observation) => ({
+                externalId: observation.id,
+                areaId,
+                observedAt: new Date(observation.observedAt),
+                cloudCover: observation.cloudCover,
+                coveragePercentage: observation.coveragePercentage,
+                score: observation.score,
+                geometry: observation.geometry as GeoJSON.Polygon,
+                bbox: observation.bbox,
+                collection: "sentinel-2-l2a",
+                assets: null,
+            })),
+            ["areaId", "externalId"],
+        );
 
         return {
             total: observationsWithScores.length,
