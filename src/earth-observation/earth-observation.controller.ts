@@ -28,4 +28,14 @@ export class EarthObservationController {
     ) {
         return this.earthObservationService.getBestObservation(areaId, dto);
     }
+
+    @Get("areas/:areaId/observations")
+    getObservations(@Param("areaId") areaId: string) {
+        return this.earthObservationService.getObservations(areaId);
+    }
+
+    @Get("areas/:areaId/observations/statistics")
+    getObservationStatistics(@Param("areaId") areaId: string) {
+        return this.earthObservationService.getObservationStatistics(areaId);
+    }
 }

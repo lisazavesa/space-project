@@ -10,6 +10,7 @@ import { BestObservationResponseDto } from "./dto/best-observation-response.dto"
 import { InjectRepository } from "@nestjs/typeorm";
 import { Observation } from "./entities/observation.entity";
 import { Repository } from "typeorm";
+import { ObservationStatisticsResponseDto } from "./dto/observation-statistics-response.dto";
 
 @Injectable()
 export class EarthObservationService {
@@ -120,6 +121,54 @@ export class EarthObservationService {
 
         return {
             bestObservation,
+        };
+    }
+
+    async getObservations(areaId: string): Promise<Observation[]> {
+        return this.observationsRepository.find({
+            where: {
+                areaId,
+            },
+            order: {
+                observedAt: "DESC",
+            },
+        });
+    }
+
+    async getObservationStatistics(
+        areaId: string,
+    ): Promise<ObservationStatisticsResponseDto> {
+        const result = await this.observationsRepository
+            .createQueryBuilder("observation")
+            .select("COUNT(observation.id)", "totalObservations")
+            .addSelect("AVG(observation.cloudCover)", "averageCloudCover")
+            .addSelect("AVG(observation.coveragePercentage)", "averageCoverage")
+            .addSelect("MAX(observation.score)", "bestScore")
+            .addSelect("MAX(observation.observedAt)", "latestObservation")
+            .addSelect("MIN(observation.observedAt)", "oldestObservation")
+            .where("observation.areaId = :areaId", { areaId })
+            .getRawOne();
+
+        return {
+            totalObservations: Number(result.totalObservations),
+            averageCloudCover:
+                result.averageCloudCover !== null
+                    ? Number(Number(result.averageCloudCover).toFixed(2))
+                    : null,
+            averageCoverage:
+                result.averageCoverage !== null
+                    ? Number(Number(result.averageCoverage).toFixed(2))
+                    : null,
+            bestScore:
+                result.bestScore !== null
+                    ? Number(Number(result.bestScore).toFixed(2))
+                    : null,
+            latestObservation: result.latestObservation
+                ? new Date(result.latestObservation).toISOString()
+                : null,
+            oldestObservation: result.oldestObservation
+                ? new Date(result.oldestObservation).toISOString()
+                : null,
         };
     }
 }
