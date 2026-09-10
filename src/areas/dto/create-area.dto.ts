@@ -26,7 +26,14 @@ export class CreateAreaDto {
         description: "GeoJSON Polygon in WGS84 coordinates",
         example: {
             type: "Polygon",
-            coordinates: [[[30.1, 59.9], [30.2, 59.9], [30.2, 60.0], [30.1, 59.9]]],
+            coordinates: [
+                [
+                    [30.1, 59.9],
+                    [30.2, 59.9],
+                    [30.2, 60.0],
+                    [30.1, 59.9],
+                ],
+            ],
         },
     })
     @IsNotEmpty()
