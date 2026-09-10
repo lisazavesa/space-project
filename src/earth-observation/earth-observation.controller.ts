@@ -1,11 +1,16 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { EarthObservationService } from "./earth-observation.service";
 import { SearchObservationsDto } from "./dto/search-observations.dto";
+import { SentinelHubAuthService } from "./services/sentinel-hub-auth.service";
+import { CalculateNdviDto } from "./dto/calculate-ndvi.dto";
+import { ApiTags } from "@nestjs/swagger";
 
+@ApiTags("Earth Observation")
 @Controller("earth-observation")
 export class EarthObservationController {
     constructor(
         private readonly earthObservationService: EarthObservationService,
+        private readonly sentinelHubAuthService: SentinelHubAuthService,
     ) {}
 
     @Get("collections")
@@ -37,5 +42,13 @@ export class EarthObservationController {
     @Get("areas/:areaId/observations/statistics")
     getObservationStatistics(@Param("areaId") areaId: string) {
         return this.earthObservationService.getObservationStatistics(areaId);
+    }
+
+    @Post("areas/:areaId/ndvi")
+    async calculateNdvi(
+        @Param("areaId") areaId: string,
+        @Body() dto: CalculateNdviDto,
+    ) {
+        return this.earthObservationService.calculateNdvi(areaId, dto);
     }
 }

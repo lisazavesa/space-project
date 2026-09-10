@@ -5,7 +5,9 @@ import { UpdateAreaDto } from './dto/update-area.dto';
 import { FindAreasByPointDto } from './dto/find-areas-by-point.dto';
 import { FindIntersectingAreasDto } from './dto/find-intersecting-areas.dto';
 import { FindNearbyAreasDto } from './dto/find-nearby-areas.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Areas')
 @Controller('areas')
 export class AreasController {
   constructor(private readonly areasService: AreasService) {}

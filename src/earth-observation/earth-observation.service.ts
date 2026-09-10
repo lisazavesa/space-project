@@ -11,6 +11,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Observation } from "./entities/observation.entity";
 import { Repository } from "typeorm";
 import { ObservationStatisticsResponseDto } from "./dto/observation-statistics-response.dto";
+import { ObservationHistoryResponseDto } from "./dto/observation-history-response.dto";
+import { CalculateNdviDto } from "./dto/calculate-ndvi.dto";
 
 @Injectable()
 export class EarthObservationService {
@@ -64,6 +66,13 @@ export class EarthObservationService {
                 };
             }),
         );
+
+        if (observations.length === 0) {
+            return {
+                total: 0,
+                observations: [],
+            };
+        }
 
         const newestObservationDate = new Date(
             Math.max(
@@ -124,15 +133,25 @@ export class EarthObservationService {
         };
     }
 
-    async getObservations(areaId: string): Promise<Observation[]> {
-        return this.observationsRepository.find({
-            where: {
-                areaId,
-            },
-            order: {
-                observedAt: "DESC",
-            },
+    async getObservations(
+        areaId: string,
+    ): Promise<ObservationHistoryResponseDto> {
+        const observations = await this.observationsRepository.find({
+            where: { areaId },
+            order: { observedAt: "DESC" },
         });
+
+        return {
+            observations: observations.map((observation) => ({
+                id: observation.externalId,
+                observedAt: observation.observedAt.toISOString(),
+                cloudCover: observation.cloudCover,
+                geometry: observation.geometry,
+                bbox: observation.bbox,
+                coveragePercentage: observation.coveragePercentage,
+                score: observation.score,
+            })),
+        };
     }
 
     async getObservationStatistics(
@@ -170,5 +189,16 @@ export class EarthObservationService {
                 ? new Date(result.oldestObservation).toISOString()
                 : null,
         };
+    }
+
+    async calculateNdvi(areaId: string, dto: CalculateNdviDto) {
+        const geometry =
+            await this.areasService.getGeometryForSentinelHub(areaId);
+
+        return this.copernicusClient.calculateNdviStatistics({
+            geometry,
+            from: dto.from,
+            to: dto.to,
+        });
     }
 }
